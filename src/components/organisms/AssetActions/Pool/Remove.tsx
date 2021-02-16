@@ -19,6 +19,10 @@ import { getMaxPercentRemove } from './utils'
 import { graphql, useStaticQuery } from 'gatsby'
 import debounce from 'lodash.debounce'
 import UserLiquidity from '../../../atoms/UserLiquidity'
+import Slippage from '../Trade/Slippage'
+import { FormikContextType, useFormikContext } from 'formik'
+import { FormTradeData, initialValues } from '../../../../models/FormTrade'
+import RemoveSlippage from './RemoveSlippage'
 
 const contentQuery = graphql`
   query PoolRemoveQuery {
@@ -60,9 +64,10 @@ export default function Remove({
   totalPoolTokens: string
   dtSymbol: string
 }): ReactElement {
+  // const { values }: FormikContextType<FormTradeData> = useFormikContext()
+
   const data = useStaticQuery(contentQuery)
   const content = data.content.edges[0].node.childContentJson.pool.remove
-
   const { ocean, accountId } = useOcean()
   const [amountPercent, setAmountPercent] = useState('0')
   const [amountMaxPercent, setAmountMaxPercent] = useState('100')
@@ -72,6 +77,10 @@ export default function Remove({
   const [isAdvanced, setIsAdvanced] = useState(false)
   const [isLoading, setIsLoading] = useState<boolean>()
   const [txId, setTxId] = useState<string>()
+  const [swapFee, setSwapFee] = useState<string>()
+  const [swapFeeValue, setSwapFeeValue] = useState<string>()
+
+  // console.log('VALUES: ', values)
 
   async function handleRemoveLiquidity() {
     setIsLoading(true)
@@ -134,6 +143,19 @@ export default function Remove({
       setAmountOcean(amountOcean)
     }, 150)
   )
+
+  useEffect(() => {
+    if (!ocean || !poolAddress) return
+
+    async function getSwapFee() {
+      const swapFee = await ocean.pool.getSwapFee(poolAddress)
+      setSwapFee(`${Number(swapFee) * 100}`)
+      const value = Number(swapFee) * parseInt(amountDatatoken)
+      setSwapFeeValue(value.toString())
+    }
+    getSwapFee()
+  }, [ocean, poolAddress])
+
   // Check and set outputs when amountPoolShares changes
   useEffect(() => {
     if (!ocean || !poolTokens) return
@@ -231,6 +253,19 @@ export default function Remove({
             <Token symbol={dtSymbol} balance={amountDatatoken} />
           )}
         </div>
+
+        <div>
+          <p>Minimum Received</p>
+          <Token symbol={dtSymbol} balance={amountDatatoken} />
+        </div>
+        <div>
+          <p>Swap fee</p>
+          <Token
+            symbol={` OCEAN  ${swapFee ? `(${swapFee}%)` : ''}`}
+            balance={swapFeeValue}
+          />
+        </div>
+        <RemoveSlippage />
       </div>
 
       <Actions
