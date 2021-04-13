@@ -11,7 +11,7 @@ import {
   mapTimeoutStringToSeconds
 } from '../../../utils/metadata'
 import MetadataPreview from '../../molecules/MetadataPreview'
-import { MetadataPublishForm } from '../../../@types/MetaData'
+import { MetadataMarket, MetadataPublishForm } from '../../../@types/MetaData'
 import { useUserPreferences } from '../../../providers/UserPreferences'
 import { Logger, Metadata } from '@oceanprotocol/lib'
 import { Persist } from '../../atoms/FormikPersist'
@@ -20,6 +20,9 @@ import Alert from '../../atoms/Alert'
 import MetadataFeedback from '../../molecules/MetadataFeedback'
 import { useAccountPurgatory } from '../../../hooks/useAccountPurgatory'
 import { useWeb3 } from '../../../providers/Web3'
+import { validateTransformedData } from '../../../utils/aquarius'
+import { useOcean } from '../../../providers/Ocean'
+import axios from 'axios'
 
 const formName = 'ocean-publish-form'
 
@@ -32,6 +35,7 @@ export default function PublishPage({
   const { accountId } = useWeb3()
   const { isInPurgatory, purgatoryData } = useAccountPurgatory(accountId)
   const { publish, publishError, isLoading, publishStepText } = usePublish()
+  const { config } = useOcean()
   const [success, setSuccess] = useState<string>()
   const [error, setError] = useState<string>()
   const [did, setDid] = useState<string>()
@@ -44,7 +48,7 @@ export default function PublishPage({
   ): Promise<void> {
     const metadata = transformPublishFormToMetadata(values)
     const timeout = mapTimeoutStringToSeconds(values.timeout)
-
+    const source = axios.CancelToken.source()
     const serviceType = values.access === 'Download' ? 'access' : 'compute'
 
     try {
@@ -53,6 +57,12 @@ export default function PublishPage({
         metadata,
         serviceType,
         values.dataTokenOptions
+      )
+
+      const ddoValidation = await validateTransformedData(
+        (metadata as unknown) as MetadataMarket,
+        config.metadataCacheUri,
+        source.token
       )
 
       const ddo = await publish(

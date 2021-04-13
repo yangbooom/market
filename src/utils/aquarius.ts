@@ -4,6 +4,7 @@ import {
   SearchQuery
 } from '@oceanprotocol/lib/dist/node/metadatacache/MetadataCache'
 import axios, { CancelToken, AxiosResponse } from 'axios'
+import { MetadataMarket } from '../@types/MetaData'
 
 // TODO: import directly from ocean.js somehow.
 // Transforming Aquarius' direct response is needed for getting actual DDOs
@@ -89,6 +90,30 @@ export async function getAssetsNames(
     )
     if (!response || response.status !== 200 || !response.data) return
     return response.data
+  } catch (error) {
+    if (axios.isCancel(error)) {
+      Logger.log(error.message)
+    } else {
+      Logger.error(error.message)
+    }
+  }
+}
+
+export async function validateTransformedData(
+  metadata: MetadataMarket,
+  metadataCacheUri: string,
+  cancelToken: CancelToken
+): Promise<AxiosResponse<Record<string, string>>> {
+  try {
+    const response: AxiosResponse<Record<string, string>> = await axios.post(
+      `${metadataCacheUri}/api/v1/aquarius/assets/ddo/validate`,
+      {
+        metadata,
+        cancelToken
+      }
+    )
+    if (!response || response.status !== 200 || !response.data) return
+    return response
   } catch (error) {
     if (axios.isCancel(error)) {
       Logger.log(error.message)
