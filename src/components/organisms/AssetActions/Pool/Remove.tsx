@@ -22,6 +22,7 @@ import InputElement from '../../../atoms/Input/InputElement'
 import { useOcean } from '../../../../providers/Ocean'
 import { useWeb3 } from '../../../../providers/Web3'
 import Decimal from 'decimal.js'
+import ddo from '../../../../../tests/unit/__fixtures__/ddo'
 
 const contentQuery = graphql`
   query PoolRemoveQuery {
@@ -173,9 +174,18 @@ export default function Remove({
     const amountPoolShares = new Decimal(e.target.value)
       .dividedBy(100)
       .mul(new Decimal(poolTokens))
-      .toPrecision(18) // in some cases the returned value contain more than 18 digits which break conversion to wei
+      .toFixed(18)
 
-    setAmountPoolShares(`${amountPoolShares}`)
+    Decimal.set({ precision: 18, rounding: 1 })
+
+    const amountPoolSharesPrecision = new Decimal(e.target.value)
+      .dividedBy(100)
+      .mul(new Decimal(poolTokens))
+      .toString()
+
+    setAmountPoolShares(amountPoolSharesPrecision)
+    console.log(`amountPoolSharesFixed: \n${amountPoolShares}`)
+    console.log(`amountPoolSharesPrecision: \n${amountPoolSharesPrecision}`)
   }
 
   function handleMaxButton(e: ChangeEvent<HTMLInputElement>) {
@@ -185,9 +195,11 @@ export default function Remove({
     const amountPoolShares = new Decimal(amountMaxPercent)
       .dividedBy(100)
       .mul(new Decimal(poolTokens))
-      .toPrecision(18)
+      .toFixed(18)
 
-    setAmountPoolShares(`${amountPoolShares}`)
+    setAmountPoolShares(amountPoolShares)
+    console.log(poolTokens)
+    console.log(amountPoolShares)
   }
 
   function handleAdvancedButton(e: FormEvent<HTMLButtonElement>) {
