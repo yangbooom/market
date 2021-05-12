@@ -26,6 +26,7 @@ interface Web3ProviderValue {
   web3Modal: Web3Modal
   accountId: string
   networkId: number
+  chainId: number
   networkDisplayName: string
   networkData: EthereumListsChain
   block: number
@@ -107,6 +108,7 @@ function Web3Provider({ children }: { children: ReactNode }): ReactElement {
   const [web3Provider, setWeb3Provider] = useState<any>()
   const [web3Modal, setWeb3Modal] = useState<Web3Modal>()
   const [networkId, setNetworkId] = useState<number>()
+  const [chainId, setChainId] = useState<number>()
   const [networkDisplayName, setNetworkDisplayName] = useState<string>()
   const [networkData, setNetworkData] = useState<EthereumListsChain>()
   const [block, setBlock] = useState<number>()
@@ -216,16 +218,24 @@ function Web3Provider({ children }: { children: ReactNode }): ReactElement {
     if (web3 && web3.currentProvider && (web3.currentProvider as any).close) {
       await (web3.currentProvider as any).close()
     }
-    web3Modal.clearCachedProvider()
+    await web3Modal.clearCachedProvider()
   }
 
   // -----------------------------------
   // Handle change events
   // -----------------------------------
+  async function handleChainChanged(chainId: string) {
+    Logger.log('[web3] Chain changed', chainId)
+    const networkId = await web3.eth.net.getId()
+    setChainId(Number(chainId))
+    setNetworkId(Number(networkId))
+  }
+
   async function handleNetworkChanged(networkId: string) {
     Logger.log('[web3] Network changed', networkId)
-    // const networkId = Number(chainId.replace('0x', ''))
+    const chainId = await web3.eth.getChainId()
     setNetworkId(Number(networkId))
+    setChainId(Number(chainId))
   }
 
   async function handleAccountsChanged(accounts: string[]) {
@@ -236,17 +246,12 @@ function Web3Provider({ children }: { children: ReactNode }): ReactElement {
   useEffect(() => {
     if (!web3Provider || !web3) return
 
-    //
-    // HEADS UP! We should rather listen to `chainChanged` exposing the `chainId`
-    // but for whatever reason the exposed `chainId` is wildly different from
-    // what is shown on https://chainid.network, in turn breaking our network/config
-    // mapping. The networkChanged is deprecated but works as expected for our case.
-    // See: https://eips.ethereum.org/EIPS/eip-1193#chainchanged
-    //
+    web3Provider.on('chainChanged', handleChainChanged)
     web3Provider.on('networkChanged', handleNetworkChanged)
     web3Provider.on('accountsChanged', handleAccountsChanged)
 
     return () => {
+      web3Provider.removeListener('chainChanged')
       web3Provider.removeListener('networkChanged')
       web3Provider.removeListener('accountsChanged')
     }
@@ -260,6 +265,7 @@ function Web3Provider({ children }: { children: ReactNode }): ReactElement {
         web3Modal,
         accountId,
         networkId,
+        chainId,
         networkDisplayName,
         networkData,
         block,
