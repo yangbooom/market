@@ -9,10 +9,9 @@ import { formatCurrency } from '@coingecko/cryptoformat'
 import { useUserPreferences } from '../../../providers/UserPreferences'
 import { useWeb3 } from '../../../providers/Web3'
 import { addOceanToWallet } from '../../../utils/web3'
-import { Logger } from '@oceanprotocol/lib'
 
 export default function Details(): ReactElement {
-  const { web3Provider, connect, logout, networkData } = useWeb3()
+  const { web3Modal, web3Provider, connect, logout, networkData } = useWeb3()
   const { balance, config } = useOcean()
   const { locale } = useUserPreferences()
 
@@ -100,8 +99,8 @@ export default function Details(): ReactElement {
             <Button
               style="text"
               size="small"
-              onClick={() => {
-                logout()
+              onClick={async () => {
+                await web3Modal?.clearCachedProvider()
                 connect()
               }}
             >
