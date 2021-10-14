@@ -1,5 +1,5 @@
-import { gql, DocumentNode, ApolloQueryResult } from '@apollo/client'
-import { DDO, BestPrice } from '@oceanprotocol/lib'
+import { ApolloQueryResult, DocumentNode, gql } from '@apollo/client'
+import { BestPrice, DDO } from '@oceanprotocol/lib'
 import { getApolloClientInstance } from '../providers/ApolloClientProvider'
 import {
   AssetsPoolPrice,
@@ -120,35 +120,84 @@ const PreviousOrderQuery = gql`
     }
   }
 `
-const HighestLiquidityAssets = gql`
-  query HighestLiquidiyAssets {
-    pools(
-      where: { datatokenReserve_gte: 1 }
-      orderBy: valueLocked
-      orderDirection: desc
-      first: 15
-    ) {
-      id
-      datatokenAddress
-      valueLocked
-    }
-  }
-`
+// edited by YB
+// const HighestLiquidityAssets = gql`
+//   query HighestLiquidiyAssets {
+//     pools(
+//       where: { datatokenReserve_gte: 1 }
+//       orderBy: valueLocked
+//       orderDirection: desc
+//       first: 15
+//     ) {
+//       id
+//       datatokenAddress
+//       valueLocked
+//     }
+//   }
+// `
 
-async function fetchData(
+const HighestLiquidityAssets = {}
+
+// async function fetchData(
+//   params: {
+//     text?: string
+//     owner?: string
+//     tags?: string
+//     categories?: string
+//     page?: string
+//     offset?: string
+//     sort?: string
+//     sortOrder?: string
+//     serviceType?: string
+//   },
+//   variables: any,
+//   // config: Config
+// ): Promise<QueryResult> {
+//   const {
+//     text,
+//     owner,
+//     tags,
+//     categories,
+//     page,
+//     offset,
+//     sort,
+//     sortOrder,
+//     serviceType
+//   } = params
+//   const metadataCache = new MetadataCache('http://127.0.0.1:5000', Logger)
+//
+//   const searchQuery = getSearchQuery(
+//     text,
+//     owner,
+//     tags,
+//     categories,
+//     page,
+//     offset,
+//     sort,
+//     sortOrder,
+//     serviceType
+//   )
+//   const queryResult = await metadataCache.queryMetadata(searchQuery)
+//   // const response = await
+//
+//   return queryResult
+// }
+
+// edited by youngbum
+export async function fetchData(
   query: DocumentNode,
   variables: any
-): Promise<ApolloQueryResult<any>> {
+): Promise<any> {
   try {
     const client = getApolloClientInstance()
-    const response = await client.query({
+    return await client.query({
       query: query,
       variables: variables,
       fetchPolicy: 'no-cache'
     })
-    return response
   } catch (error) {
     console.error('Error fetchData: ', error.message)
+    throw Error(error.message)
   }
 }
 

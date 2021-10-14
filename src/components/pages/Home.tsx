@@ -15,8 +15,8 @@ import { queryMetadata } from '../../utils/aquarius'
 import Permission from '../organisms/Permission'
 import { getHighestLiquidityDIDs } from '../../utils/subgraph'
 import { DDO, Logger } from '@oceanprotocol/lib'
-
 import { useWeb3 } from '../../providers/Web3'
+import { getResults } from '../templates/Search/utils'
 
 const queryLatest = {
   page: 1,
@@ -50,7 +50,6 @@ function SectionQueryResult({
   const { config } = useOcean()
   const [result, setResult] = useState<QueryResult>()
   const [loading, setLoading] = useState<boolean>()
-
   useEffect(() => {
     if (!config?.metadataCacheUri) return
     const source = axios.CancelToken.source()
@@ -80,13 +79,12 @@ function SectionQueryResult({
         Logger.log(error.message)
       }
     }
-    init()
 
+    init()
     return () => {
       source.cancel()
     }
   }, [query, config?.metadataCacheUri])
-
   return (
     <section className={styles.section}>
       <h3>{title}</h3>
@@ -104,24 +102,42 @@ export default function HomePage(): ReactElement {
   const { config, loading } = useOcean()
   const [queryAndDids, setQueryAndDids] = useState<[SearchQuery, string]>()
   const { web3Loading, web3Provider } = useWeb3()
-
   useEffect(() => {
     if (loading || (web3Loading && web3Provider)) return
-    getHighestLiquidityDIDs().then((results) => {
-      const queryHighest = {
-        page: 1,
-        offset: 15,
-        query: {
-          query_string: {
-            query: `(${results}) AND -isInPurgatory:true`,
-            fields: ['dataToken']
-          }
-        }
-      }
-      setQueryAndDids([queryHighest, results])
-    })
-  }, [config.subgraphUri, loading, web3Loading])
 
+    async function initSearch() {
+      const queryResult = await getResults(
+        {
+          page: 1,
+          offset: 15,
+          query: {
+            query_string: {
+              match_all: {}
+            }
+          },
+          sort: { value: 1 }
+        },
+        config.metadataCacheUri
+      )
+      setQueryAndDids([queryResult, ''])
+    }
+
+    initSearch()
+    // getHighestLiquidityDIDs().then((results) => {
+    //   const queryHighest = {
+    //     page: 1,
+    //     offset: 15,
+    //     query: {
+    //       query_string: {
+    //         query: `(${results}) AND -isInPurgatory:true`,
+    //         fields: ['dataToken']
+    //       }
+    //     }
+    //   }
+    //   setQueryAndDids([queryHighest, results])
+    // })
+    //
+  }, [config.subgraphUri, loading, web3Loading])
   return (
     <Permission eventType="browse">
       <>

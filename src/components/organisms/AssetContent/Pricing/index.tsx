@@ -10,6 +10,8 @@ import { toast } from 'react-toastify'
 import Feedback from './Feedback'
 import { graphql, useStaticQuery } from 'gatsby'
 import { usePricing } from '../../../../hooks/usePricing'
+import { gql } from '@apollo/client'
+import { fetchData, getAssetsPriceList } from '../../../../utils/subgraph'
 
 const query = graphql`
   query PricingQuery {
@@ -55,6 +57,8 @@ const query = graphql`
 export default function Pricing({ ddo }: { ddo: DDO }): ReactElement {
   // Get content
   const data = useStaticQuery(query)
+  // const data = getAssetsPriceList([ddo])
+  // alert(JSON.stringify(data))
   const content = data.content.edges[0].node.childContentJson.create
 
   // View states

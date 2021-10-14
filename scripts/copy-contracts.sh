@@ -26,6 +26,6 @@ if [ $COMMAND_STATUS -ne 0 ]; then
   exit 1
 fi
 
-docker cp "${contracts_docker_id}":/ocean-contracts/artifacts/. ./node_modules/@oceanprotocol/contracts/artifacts/
+docker cp "${contracts_docker_id}":/ocean-contracts/artifacts/. ./abis/
 
 printf '\e[32m✔ Copied new contract artifacts.\e[0m\n'

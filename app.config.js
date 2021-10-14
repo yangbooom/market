@@ -16,6 +16,7 @@ module.exports = {
   // Used for conversion display, can be whatever coingecko API supports
   // see: https://api.coingecko.com/api/v3/simple/supported_vs_currencies
   currencies: [
+    'KRW',
     'EUR',
     'USD',
     'CAD',
